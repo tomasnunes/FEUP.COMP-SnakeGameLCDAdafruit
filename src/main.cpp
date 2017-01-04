@@ -13,27 +13,116 @@
   MIT license, all text above must be included in any redistribution
  ****************************************************/
 
+#include "Time.h"
 #include "SPI.h"
 #include "Adafruit_GFX.h"
 #include "Adafruit_ILI9340.h"
+#include "Snake.h"
 
 // These are the pins used for the UNO
 // for Due/Mega/Leonardo use the hardware SPI pins (which are different)
 const uint8_t g_sclk(13), g_miso(12), g_mosi(11), g_cs(10), g_dc(9), g_rst(8);
+int g_menuFlag(1);
+
+//Functions Declaration
+unsigned long testFillScreen();
+unsigned long testText();
+unsigned long testLines(uint16_t color);
+unsigned long testFastLines(uint16_t color1, uint16_t color2);
+unsigned long testRects(uint16_t color);
+unsigned long testFilledRects(uint16_t color1, uint16_t color2);
+unsigned long testFilledCircles(uint8_t radius, uint16_t color);
+unsigned long testCircles(uint8_t radius, uint16_t color);
+unsigned long testTriangles();
+unsigned long testFilledTriangles();
+unsigned long testRoundRects();
+unsigned long testFilledRoundRects();
+
+void playDemo(Adafruit_ILI9340 &tft);
+void printMenu(Adafruit_ILI9340 &tft);
+void playGame(Adafruit_ILI9340 &tft);
 
 // Using software SPI is really not suggested, its incredibly slow
 //Adafruit_ILI9340 tft = Adafruit_ILI9340(_cs, _dc, _mosi, _sclk, _rst, _miso);
 // Use hardware SPI
-Adafruit_ILI9340 tft = Adafruit_ILI9340(g_cs, g_dc, g_mosi, g_sclk, g_rst, g_miso);
+Adafruit_ILI9340 tft = Adafruit_ILI9340(g_cs, g_dc, g_rst);
 
 void setup() {
   Serial.begin(9600);
   while (!Serial);
 
-  Serial.println("Adafruit 2.2\" SPI TFT Test!");
+  pinMode(g_leftArrow, INPUT);
+  pinMode(g_rightArrow, INPUT);
+  pinMode(g_upArrow, INPUT);
+  pinMode(g_downArrow, INPUT);
 
   tft.begin();
+  playGame(tft); //ONLY FOR TEST PURPOSE!!!
+  tft.fillScreen(ILI9340_BLACK);
 
+  time_t t = now();
+
+  tft.setCursor(70, 70);
+  tft.setTextColor(ILI9340_WHITE); tft.setTextSize(2);
+  tft.print(hour());
+  tft.print(":");
+  if(minute() < 10)
+    tft.print('0');
+  tft.print(minute());
+  tft.print(":");
+  if(second() < 10)
+    tft.print('0');
+  tft.println(second());
+  /*tft.print(day());
+  tft.print("/");
+  tft.print(month());
+  tft.print("/");
+  tft.print(year());
+  tft.println();*/
+
+  tft.setCursor(30, 280);
+  tft.setTextColor(ILI9340_GREEN);
+  tft.setTextSize(2);
+  tft.print("Press any key...");
+
+  while(digitalRead(g_leftArrow) && digitalRead(g_rightArrow) && digitalRead(g_upArrow) && digitalRead(g_downArrow)) {
+  }
+}
+
+void loop(void) {
+  if(g_menuFlag) {
+    printMenu(tft);
+    g_menuFlag = 0;
+  }
+  if(!digitalRead(g_leftArrow)) {
+    g_menuFlag = 1;
+    playDemo(tft);
+  }
+  else if(!digitalRead(g_upArrow)) {
+    g_menuFlag = 1;
+    playGame(tft);
+  }
+  else if(!digitalRead(g_downArrow)) {
+    g_menuFlag = 1;
+  }
+}
+
+void printMenu(Adafruit_ILI9340 &tft) {
+  tft.fillScreen(ILI9340_BLACK);
+  tft.setCursor(80, 70);
+  tft.setTextColor(ILI9340_RED); tft.setTextSize(3);
+  tft.print("MENU");
+
+  tft.setCursor(40, 180);
+  tft.setTextColor(ILI9340_WHITE); tft.setTextSize(2);
+  tft.println("(UP)    Game");
+  tft.setCursor(40, 200);
+  tft.println("(LEFT)  Demo");
+  tft.setCursor(40, 220);
+  tft.println("(RIGHT) Images");
+}
+
+void playDemo(Adafruit_ILI9340 &tft) {
   Serial.println(F("Benchmark                Time (microseconds)"));
   Serial.print(F("Screen fill              "));
   Serial.println(testFillScreen());
@@ -85,14 +174,23 @@ void setup() {
   Serial.println(F("Done!"));
 }
 
-void loop(void) {
-  for(uint8_t rotation=0; rotation<4; rotation++) {
-    tft.setRotation(rotation);
-    testText();
-    delay(2000);
+void playGame(Adafruit_ILI9340 &tft) {
+  tft.fillScreen(ILI9340_BLACK);
+  tft.drawFastHLine(0, 301, 240, ILI9340_WHITE);
+  tft.setCursor(90, 308);
+  tft.setTextColor(ILI9340_BLUE); tft.setTextSize(1);
+  tft.print("Score: ");
+
+  Snake snake(&tft);
+
+  snake.printScore();
+
+  while(snake.isNotDead()) {
+    snake.drawAndUpdate();
+    snake.getDirection();
+    delay(100); //Controls the SPEED!
   }
 }
-
 
 unsigned long testFillScreen() {
   unsigned long start = micros();
