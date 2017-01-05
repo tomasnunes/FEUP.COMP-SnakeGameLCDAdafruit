@@ -315,7 +315,6 @@ void Adafruit_ILI9340::drawPixel(int16_t x, int16_t y, uint16_t color) {
   digitalWrite(_cs, HIGH);
 }
 
-
 void Adafruit_ILI9340::drawFastVLine(int16_t x, int16_t y, int16_t h,
  uint16_t color) {
 

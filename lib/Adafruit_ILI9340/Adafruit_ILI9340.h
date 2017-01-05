@@ -102,6 +102,9 @@
 #define ILI9340_YELLOW  0xFFE0
 #define ILI9340_WHITE   0xFFFF
 
+const uint8_t g_leftArrow(4), g_rightArrow(6), g_upArrow(5), g_downArrow(7);
+const int g_width(240), g_heigth(320);
+const uint8_t g_sclk(13), g_miso(12), g_mosi(11), g_cs(10), g_dc(9), g_rst(8);
 
 class Adafruit_ILI9340 : public Adafruit_GFX {
 

@@ -12,19 +12,19 @@
   Written by Limor Fried/Ladyada for Adafruit Industries.
   MIT license, all text above must be included in any redistribution
  ****************************************************/
-
-#include "Time.h"
 #include "SPI.h"
-#include "Adafruit_GFX.h"
 #include "Adafruit_ILI9340.h"
+#include "Time.h"
 #include "Snake.h"
 
 // These are the pins used for the UNO
 // for Due/Mega/Leonardo use the hardware SPI pins (which are different)
-const uint8_t g_sclk(13), g_miso(12), g_mosi(11), g_cs(10), g_dc(9), g_rst(8);
 int g_menuFlag(1);
 
-//Functions Declaration
+void printMenu();
+void playGame();
+//Demo
+void playDemo();
 unsigned long testFillScreen();
 unsigned long testText();
 unsigned long testLines(uint16_t color);
@@ -37,10 +37,6 @@ unsigned long testTriangles();
 unsigned long testFilledTriangles();
 unsigned long testRoundRects();
 unsigned long testFilledRoundRects();
-
-void playDemo(Adafruit_ILI9340 &tft);
-void printMenu(Adafruit_ILI9340 &tft);
-void playGame(Adafruit_ILI9340 &tft);
 
 // Using software SPI is really not suggested, its incredibly slow
 //Adafruit_ILI9340 tft = Adafruit_ILI9340(_cs, _dc, _mosi, _sclk, _rst, _miso);
@@ -57,9 +53,12 @@ void setup() {
   pinMode(g_downArrow, INPUT);
 
   tft.begin();
-  playGame(tft); //ONLY FOR TEST PURPOSE!!!
+  //PRINT SOMETHING TO THE SCREEN
+  delay(2000);
+  //playGame(); //ONLY FOR TEST PURPOSE!!!
   tft.fillScreen(ILI9340_BLACK);
 
+  //LOCK SCREEN (create function, put in lock screen after some time && eliminate time and add feup logo, micro sd)
   time_t t = now();
 
   tft.setCursor(70, 70);
@@ -91,23 +90,23 @@ void setup() {
 
 void loop(void) {
   if(g_menuFlag) {
-    printMenu(tft);
+    printMenu();
     g_menuFlag = 0;
   }
   if(!digitalRead(g_leftArrow)) {
     g_menuFlag = 1;
-    playDemo(tft);
+    playDemo();
   }
   else if(!digitalRead(g_upArrow)) {
     g_menuFlag = 1;
-    playGame(tft);
+    playGame();
   }
   else if(!digitalRead(g_downArrow)) {
     g_menuFlag = 1;
   }
 }
 
-void printMenu(Adafruit_ILI9340 &tft) {
+void printMenu() {
   tft.fillScreen(ILI9340_BLACK);
   tft.setCursor(80, 70);
   tft.setTextColor(ILI9340_RED); tft.setTextSize(3);
@@ -122,7 +121,36 @@ void printMenu(Adafruit_ILI9340 &tft) {
   tft.println("(RIGHT) Images");
 }
 
-void playDemo(Adafruit_ILI9340 &tft) {
+void playGame() {
+  tft.fillScreen(ILI9340_BLACK);
+  tft.drawFastHLine(0, 296, g_width, ILI9340_WHITE);
+  tft.setCursor(90, 304);
+  tft.setTextColor(ILI9340_BLUE); tft.setTextSize(1);
+  tft.print("Score: ");
+
+  Snake snake(&tft);
+  Food food(&tft);
+
+  snake.printScore();
+
+  while(snake.isNotDead()) {
+    snake.getDirection();
+    snake.updateHead();
+    if(snake == food) {
+      ++snake;
+      snake.hasEaten();
+      snake.printScore();
+      do {
+        food.updateAndDraw();
+      } while(snake != food);
+    }
+
+    snake.drawAndClean();
+    delay(100); //Controls the SPEED!
+  }
+}
+
+void playDemo() {
   Serial.println(F("Benchmark                Time (microseconds)"));
   Serial.print(F("Screen fill              "));
   Serial.println(testFillScreen());
@@ -172,24 +200,6 @@ void playDemo(Adafruit_ILI9340 &tft) {
   delay(500);
 
   Serial.println(F("Done!"));
-}
-
-void playGame(Adafruit_ILI9340 &tft) {
-  tft.fillScreen(ILI9340_BLACK);
-  tft.drawFastHLine(0, 301, 240, ILI9340_WHITE);
-  tft.setCursor(90, 308);
-  tft.setTextColor(ILI9340_BLUE); tft.setTextSize(1);
-  tft.print("Score: ");
-
-  Snake snake(&tft);
-
-  snake.printScore();
-
-  while(snake.isNotDead()) {
-    snake.drawAndUpdate();
-    snake.getDirection();
-    delay(100); //Controls the SPEED!
-  }
 }
 
 unsigned long testFillScreen() {
