@@ -1,17 +1,56 @@
 #include "Snake.h"
 
-Snake& Snake::operator++() {
-  ++m_score;
-  ++m_size;
-  return *this;
+int Snake::getSize() const {
+  return m_size;
 }
 
-bool Snake::isNotDead() const {
-  return m_notDead;
+bool Snake::isDead() const {
+  return m_hasDied;
 }
 
-void Snake::hasEaten() {
-  m_hasEaten = true;
+void Snake::dies() {
+  m_hasDied = true;
+  flash();
+  delay(1000);
+}
+
+void Snake::flash() {
+  delay(800);
+
+  for(int ii=0; ii<m_size; ++ii)
+    m_tft->fillRect(m_gridPosition[ii].gridX*m_scale, m_gridPosition[ii].gridY*m_scale, m_scale, m_scale, ILI9340_BLACK);
+  delay(300);
+
+  for(int ii=0; ii<m_size; ++ii)
+    m_tft->fillRect(m_gridPosition[ii].gridX*m_scale, m_gridPosition[ii].gridY*m_scale, m_scale, m_scale, ILI9340_RED);
+  delay(500);
+}
+
+bool Snake::playAgain() {
+  m_tft->fillScreen(ILI9340_BLACK);
+
+  m_tft->setCursor(40, 70);
+  m_tft->setTextColor(ILI9340_RED); m_tft->setTextSize(3);
+  m_tft->print("Game Over");
+  m_tft->setCursor(80, 140);
+  m_tft->setTextColor(ILI9340_CYAN); m_tft->setTextSize(1.5);
+  m_tft->print("Your Score: "); m_tft->print(m_score);
+  m_tft->setCursor(18, 200);
+  m_tft->setTextColor(ILI9340_WHITE); m_tft->setTextSize(2);
+  m_tft->print("Wanna play again?");
+  m_tft->setCursor(60, 230);
+  m_tft->setTextColor(ILI9340_WHITE); m_tft->setTextSize(2);
+  m_tft->print("(UP)   Yes");
+  m_tft->setCursor(60, 250);
+  m_tft->setTextColor(ILI9340_WHITE); m_tft->setTextSize(2);
+  m_tft->print("(DOWN) No");
+
+  while(1) {
+    if(!digitalRead(g_upArrow))
+      return true;
+    else if(!digitalRead(g_downArrow))
+      return false;
+  }
 }
 
 void Snake::updateHead() {
@@ -91,6 +130,23 @@ void Snake::pushToVector() {
   m_gridPosition[0].gridY = m_gridHeadY;
 }
 
+bool Snake::ateItsOwnTail() const {
+  //Starts at 4, it can't eat its own tail if it's size is 4 or smaller
+  for(int ii=4; ii<m_size; ++ii)
+    if(m_gridHeadX == m_gridPosition[ii].gridX && m_gridHeadY == m_gridPosition[ii].gridY)
+      return true;
+
+  return false;
+}
+
+Snake& Snake::operator++() {
+  ++m_score;
+  ++m_size;
+  m_hasEaten = true;
+  printScore();
+
+  return *this;
+}
 bool operator==(const Snake &snake, const Food &food) {
   return (snake.m_gridHeadX == food.m_gridX && snake.m_gridHeadY == food.m_gridY);
 }

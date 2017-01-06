@@ -12,7 +12,7 @@ class Snake {
 private:
   GridPosition *m_gridPosition;
   int m_gridHeadX, m_gridHeadY, m_gridTailX, m_gridTailY, m_directionX, m_directionY, m_scale, m_score, m_size, m_gridWidth, m_gridHeight, m_vectorSize;
-  bool m_notDead, m_hasEaten;
+  bool m_hasDied, m_hasEaten;
 
   Adafruit_ILI9340 *m_tft; //Pointer to our screen object (tft) so we can use it in our snake member functions.
                            //An alternative would be passing the tft object by reference to every method, if necessary.
@@ -26,7 +26,7 @@ public:
     m_gridTailY = -1;
     m_score = 0;
     m_size = 0;
-    m_notDead = true;
+    m_hasDied = false;
     m_hasEaten = false;
     m_gridWidth = g_width/m_scale;
     m_gridHeight = (g_heigth-24)/m_scale;
@@ -49,8 +49,12 @@ public:
 
   Snake& operator++();
 
+  int getSize() const;
   void hasEaten();
-  bool isNotDead() const;
+  bool isDead() const;
+  void dies();
+  void flash();
+  bool playAgain();
   void updateHead();
   void drawHead();
   void cleanTail();
@@ -59,6 +63,7 @@ public:
   void getDirection();
   void generateFood();
   void pushToVector();
+  bool ateItsOwnTail() const;
 
   friend class Food;
   friend bool operator==(const Food &food, const Snake &snake);

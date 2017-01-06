@@ -19,7 +19,7 @@
 
 // These are the pins used for the UNO
 // for Due/Mega/Leonardo use the hardware SPI pins (which are different)
-int g_menuFlag(1);
+bool g_menuFlag(true), g_playGame(true), g_playDemo(false);
 
 void printMenu();
 void playGame();
@@ -53,12 +53,13 @@ void setup() {
   pinMode(g_downArrow, INPUT);
 
   tft.begin();
+
   //PRINT SOMETHING TO THE SCREEN
-  delay(2000);
-  //playGame(); //ONLY FOR TEST PURPOSE!!!
+
   tft.fillScreen(ILI9340_BLACK);
 
   //LOCK SCREEN (create function, put in lock screen after some time && eliminate time and add feup logo, micro sd)
+
   time_t t = now();
 
   tft.setCursor(70, 70);
@@ -79,7 +80,7 @@ void setup() {
   tft.print(year());
   tft.println();*/
 
-  tft.setCursor(30, 280);
+  tft.setCursor(25, 280);
   tft.setTextColor(ILI9340_GREEN);
   tft.setTextSize(2);
   tft.print("Press any key...");
@@ -89,25 +90,35 @@ void setup() {
 }
 
 void loop(void) {
-  if(g_menuFlag) {
-    printMenu();
-    g_menuFlag = 0;
-  }
-  if(!digitalRead(g_leftArrow)) {
-    g_menuFlag = 1;
-    playDemo();
-  }
-  else if(!digitalRead(g_upArrow)) {
-    g_menuFlag = 1;
+  if(g_playGame) {
+    g_playGame = false;
     playGame();
   }
+  else if(g_playDemo) {
+    g_playDemo = false;
+    playDemo();
+  }
+  else if(g_menuFlag) {
+    g_menuFlag = false;
+    printMenu();
+  }
+
+  if(!digitalRead(g_leftArrow)) {
+    g_playDemo = true;
+    g_menuFlag = true;
+  }
+  else if(!digitalRead(g_upArrow)) {
+    g_playGame = true;
+    g_menuFlag = true;
+  }
   else if(!digitalRead(g_downArrow)) {
-    g_menuFlag = 1;
+    g_menuFlag = true;
   }
 }
 
 void printMenu() {
   tft.fillScreen(ILI9340_BLACK);
+
   tft.setCursor(80, 70);
   tft.setTextColor(ILI9340_RED); tft.setTextSize(3);
   tft.print("MENU");
@@ -123,6 +134,7 @@ void printMenu() {
 
 void playGame() {
   tft.fillScreen(ILI9340_BLACK);
+
   tft.drawFastHLine(0, 296, g_width, ILI9340_WHITE);
   tft.setCursor(90, 304);
   tft.setTextColor(ILI9340_BLUE); tft.setTextSize(1);
@@ -130,23 +142,31 @@ void playGame() {
 
   Snake snake(&tft);
   Food food(&tft);
+  int gameSpeed(100);
 
   snake.printScore();
 
-  while(snake.isNotDead()) {
+  while(!snake.isDead()) {
     snake.getDirection();
     snake.updateHead();
     if(snake == food) {
       ++snake;
-      snake.hasEaten();
-      snake.printScore();
       do {
         food.updateAndDraw();
-      } while(snake != food);
+      } while(food != snake);
+
+      //Updates Speed when snake grows
+      if(!(snake.getSize()%5) && gameSpeed>30)
+        gameSpeed -= 20;
     }
 
     snake.drawAndClean();
-    delay(100); //Controls the SPEED!
+    if(snake.ateItsOwnTail()) {
+      snake.dies();
+      g_playGame = snake.playAgain();
+    }
+
+    delay(gameSpeed); //Controls the SPEED!
   }
 }
 
