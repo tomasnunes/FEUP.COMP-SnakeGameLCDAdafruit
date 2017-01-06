@@ -14,12 +14,10 @@
  ****************************************************/
 #include "SPI.h"
 #include "Adafruit_ILI9340.h"
-#include "Time.h"
 #include "Snake.h"
+#include "Wire.h"
 
-// These are the pins used for the UNO
-// for Due/Mega/Leonardo use the hardware SPI pins (which are different)
-bool g_menuFlag(true), g_playGame(true), g_playDemo(false);
+bool g_menuFlag(true), g_playGame(false), g_playDemo(false), g_hardMode(false);
 
 void printMenu();
 void playGame();
@@ -51,7 +49,10 @@ void setup() {
   pinMode(g_rightArrow, INPUT);
   pinMode(g_upArrow, INPUT);
   pinMode(g_downArrow, INPUT);
+  pinMode(g_ss, OUTPUT);
+  digitalWrite(g_ss, HIGH);
 
+  Wire.begin();
   tft.begin();
 
   //PRINT SOMETHING TO THE SCREEN
@@ -60,7 +61,7 @@ void setup() {
 
   //LOCK SCREEN (create function, put in lock screen after some time && eliminate time and add feup logo, micro sd)
 
-  time_t t = now();
+  /*time_t t = now();
 
   tft.setCursor(70, 70);
   tft.setTextColor(ILI9340_WHITE); tft.setTextSize(2);
@@ -73,7 +74,7 @@ void setup() {
   if(second() < 10)
     tft.print('0');
   tft.println(second());
-  /*tft.print(day());
+  tft.print(day());
   tft.print("/");
   tft.print(month());
   tft.print("/");
@@ -85,12 +86,48 @@ void setup() {
   tft.setTextSize(2);
   tft.print("Press any key...");
 
-  while(digitalRead(g_leftArrow) && digitalRead(g_rightArrow) && digitalRead(g_upArrow) && digitalRead(g_downArrow)) {
-  }
+  do {
+    if(Serial.available()) {
+      g_buffer = ' ';
+      g_buffer = Serial.read();
+    }
+  } while((g_buffer==' ' || g_buffer=='\0' || g_buffer=='\n') && digitalRead(g_leftArrow) && digitalRead(g_rightArrow) && digitalRead(g_upArrow) && digitalRead(g_downArrow));
+
+  g_buffer = ' ';
 }
 
 void loop(void) {
-  if(g_playGame) {
+  if(Serial.available()) {
+    g_buffer = ' ';
+    g_buffer = Serial.read();
+  }
+
+  if(!digitalRead(g_leftArrow) || g_buffer=='a' || g_buffer=='A') {
+    g_playDemo = true;
+    g_menuFlag = true;
+  }
+  else if(!digitalRead(g_downArrow) || g_buffer=='s' || g_buffer=='S') {
+    g_hardMode = true;
+    g_menuFlag = true;
+  }
+  else if(!digitalRead(g_upArrow) || g_buffer=='w' || g_buffer=='W') {
+    g_playGame = true;
+    g_menuFlag = true;
+  }
+  else if(!digitalRead(g_downArrow) || g_buffer=='s' || g_buffer=='S') {
+    g_menuFlag = true;
+  }
+
+  g_buffer = ' ';
+
+  if(g_hardMode) {
+    playGame();
+    if(g_playGame)
+      g_playGame = false;
+    else
+      g_hardMode = false;
+  }
+  else if(g_playGame) {
     g_playGame = false;
     playGame();
   }
@@ -102,18 +139,6 @@ void loop(void) {
     g_menuFlag = false;
     printMenu();
   }
-
-  if(!digitalRead(g_leftArrow)) {
-    g_playDemo = true;
-    g_menuFlag = true;
-  }
-  else if(!digitalRead(g_upArrow)) {
-    g_playGame = true;
-    g_menuFlag = true;
-  }
-  else if(!digitalRead(g_downArrow)) {
-    g_menuFlag = true;
-  }
 }
 
 void printMenu() {
@@ -123,12 +148,14 @@ void printMenu() {
   tft.setTextColor(ILI9340_RED); tft.setTextSize(3);
   tft.print("MENU");
 
-  tft.setCursor(40, 180);
+  tft.setCursor(20, 190);
   tft.setTextColor(ILI9340_WHITE); tft.setTextSize(2);
   tft.println("(UP)    Game");
-  tft.setCursor(40, 200);
+  tft.setCursor(20, 210);
+  tft.println("(DOWN)  Hard Mode");
+  tft.setCursor(20, 230);
   tft.println("(LEFT)  Demo");
-  tft.setCursor(40, 220);
+  tft.setCursor(20, 250);
   tft.println("(RIGHT) Images");
 }
 
@@ -137,10 +164,10 @@ void playGame() {
 
   tft.drawFastHLine(0, 296, g_width, ILI9340_WHITE);
   tft.setCursor(90, 304);
-  tft.setTextColor(ILI9340_BLUE); tft.setTextSize(1);
+  tft.setTextColor(ILI9340_RED); tft.setTextSize(1);
   tft.print("Score: ");
 
-  Snake snake(&tft);
+  Snake snake(&tft, g_hardMode);
   Food food(&tft);
   int gameSpeed(100);
 
@@ -158,15 +185,18 @@ void playGame() {
       //Updates Speed when snake grows
       if(!(snake.getSize()%5) && gameSpeed>30)
         gameSpeed -= 20;
-    }
 
-    snake.drawAndClean();
-    if(snake.ateItsOwnTail()) {
+      snake.drawHead();
+      snake.pushToVector();
+    }
+    else if(snake.ateItsOwnTail() || snake.isDead()) {
       snake.dies();
       g_playGame = snake.playAgain();
     }
-
-    delay(gameSpeed); //Controls the SPEED!
+    else {
+      snake.drawAndClean();
+      delay(gameSpeed); //Controls the SPEED!
+    }
   }
 }
 

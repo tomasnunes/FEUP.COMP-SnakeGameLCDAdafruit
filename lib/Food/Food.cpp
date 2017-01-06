@@ -12,5 +12,5 @@ void Food::genLocation() {
 void Food::updateAndDraw() {
   //m_tft->fillRect(m_gridX*m_scale, m_gridY*m_scale, m_scale, m_scale, ILI9340_BLACK);
   genLocation();
-  m_tft->fillRect(m_gridX*m_scale, m_gridY*m_scale, m_scale, m_scale, ILI9340_RED);
+  m_tft->fillRect(m_gridX*m_scale, m_gridY*m_scale, m_scale, m_scale, ILI9340_CYAN);
 }
