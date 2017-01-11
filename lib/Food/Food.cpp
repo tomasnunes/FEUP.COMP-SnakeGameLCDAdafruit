@@ -9,8 +9,6 @@ void Food::genLocation() {
     m_gridY = randNumber(0, m_gridHeight-1);
 }
 
-void Food::updateAndDraw() {
-  //m_tft->fillRect(m_gridX*m_scale, m_gridY*m_scale, m_scale, m_scale, ILI9340_BLACK);
-  genLocation();
+void Food::draw() {
   m_tft->fillRect(m_gridX*m_scale, m_gridY*m_scale, m_scale, m_scale, ILI9340_CYAN);
 }

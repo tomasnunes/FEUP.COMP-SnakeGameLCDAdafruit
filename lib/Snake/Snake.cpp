@@ -11,7 +11,6 @@ bool Snake::isDead() const {
 void Snake::dies() {
   m_hasDied = true;
   flash();
-  delay(1000);
 }
 
 void Snake::flash() {
@@ -21,13 +20,29 @@ void Snake::flash() {
     m_tft->fillRect(m_gridSnakePosition[ii].gridX*m_scale, m_gridSnakePosition[ii].gridY*m_scale, m_scale, m_scale, ILI9340_BLACK);
   delay(50);
 
-  for(int ii=0; ii<m_size; ++ii)
+  for(int ii=0; ii<m_size; ++ii) {
     m_tft->fillRect(m_gridSnakePosition[ii].gridX*m_scale, m_gridSnakePosition[ii].gridY*m_scale, m_scale, m_scale, ILI9340_RED);
-  delay(500);
+
+    //Print black line separating each part
+    if(ii == m_size-1) { }//If in last position, do nothing
+    else if(m_gridSnakePosition[ii].gridX > m_gridSnakePosition[ii+1].gridX)
+      m_tft->drawFastVLine(m_gridSnakePosition[ii].gridX*m_scale, m_gridSnakePosition[ii].gridY*m_scale, m_scale, ILI9340_BLACK);
+    else if(m_gridSnakePosition[ii].gridX < m_gridSnakePosition[ii+1].gridX)
+      m_tft->drawFastVLine((m_gridSnakePosition[ii].gridX+1)*m_scale-1, m_gridSnakePosition[ii].gridY*m_scale, m_scale, ILI9340_BLACK);
+    else if(m_gridSnakePosition[ii].gridY > m_gridSnakePosition[ii+1].gridY)
+      m_tft->drawFastHLine(m_gridSnakePosition[ii].gridX*m_scale, m_gridSnakePosition[ii].gridY*m_scale, m_scale, ILI9340_BLACK);
+    else if(m_gridSnakePosition[ii].gridY < m_gridSnakePosition[ii+1].gridY)
+      m_tft->drawFastHLine(m_gridSnakePosition[ii].gridX*m_scale, (m_gridSnakePosition[ii].gridY+1)*m_scale-1, m_scale, ILI9340_BLACK);
+
+    delay(20);
+  }
+  delay(1000);
 }
 
 bool Snake::playAgain() {
   m_tft->fillScreen(ILI9340_BLACK);
+
+  cleanInput();
 
   m_tft->setCursor(40, 70);
   m_tft->setTextColor(ILI9340_RED); m_tft->setTextSize(3);
@@ -51,16 +66,20 @@ bool Snake::playAgain() {
       g_buffer = Serial.read();
     }
 
-    if(!digitalRead(g_upArrow) || g_buffer=='w' || g_buffer=='W')
+    if(!digitalRead(g_upArrow) || g_buffer=='w' || g_buffer=='W') {
+      g_buffer = ' ';
       return true;
-    else if(!digitalRead(g_downArrow) || g_buffer=='s' || g_buffer=='S')
+    }
+    else if(!digitalRead(g_downArrow) || g_buffer=='s' || g_buffer=='S') {
+      g_buffer = ' ';
       return false;
+    }
   }
 
   g_buffer = ' ';
 }
 
-void Snake::updateHead() {
+void Snake::updateHeadAndCheckWallHit() {
   if((m_gridHeadX+m_directionX < 0 || m_gridHeadX+m_directionX > m_gridWidth-1) && m_hardMode)
     m_hasDied = true;
   else if(m_gridHeadX+m_directionX < 0)
@@ -115,8 +134,6 @@ void Snake::printScore() {
 void Snake::getDirection() {
   if (Serial.available()) {
     g_buffer = Serial.read();
-    Serial.read();
-    Serial.read();
   }
 
   if((!digitalRead(g_rightArrow) || g_buffer=='d' || g_buffer=='D') && !m_directionX) {
@@ -154,13 +171,13 @@ void Snake::pushToVector() {
   m_gridSnakePosition[0].gridY = m_gridHeadY;
 }
 
-bool Snake::ateItsOwnTail() const {
-  //Starts at 4, it can't eat its own tail if it's size is 4 or smaller
+void Snake::ateItsOwnTail() {
+  //Starts at 4, it can't eat its own tail if its size is 4 or less
   for(int ii=4; ii<m_size; ++ii)
-    if(m_gridHeadX == m_gridSnakePosition[ii].gridX && m_gridHeadY == m_gridSnakePosition[ii].gridY)
-      return true;
-
-  return false;
+    if(m_gridHeadX == m_gridSnakePosition[ii].gridX && m_gridHeadY == m_gridSnakePosition[ii].gridY) {
+      m_hasDied = true;
+      return;
+    }
 }
 
 Snake& Snake::operator++() {

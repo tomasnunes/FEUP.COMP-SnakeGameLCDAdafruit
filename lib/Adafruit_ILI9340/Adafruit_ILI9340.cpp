@@ -32,37 +32,33 @@ Adafruit_ILI9340::Adafruit_ILI9340(uint8_t cs, uint8_t dc, uint8_t mosi,
   hwSPI = false;
 }
 
-
+//NOT USED
 // Constructor when using hardware SPI.  Faster, but must use SPI pins
 // specific to each board type (e.g. 11,13 for Uno, 51,52 for Mega, etc.)
-Adafruit_ILI9340::Adafruit_ILI9340(uint8_t cs, uint8_t dc, uint8_t rst) : Adafruit_GFX(ILI9340_TFTWIDTH, ILI9340_TFTHEIGHT) {
+/*Adafruit_ILI9340::Adafruit_ILI9340(uint8_t cs, uint8_t dc, uint8_t rst) : Adafruit_GFX(ILI9340_TFTWIDTH, ILI9340_TFTHEIGHT) {
   _cs   = cs;
   _dc   = dc;
   _rst  = rst;
   hwSPI = true;
   _mosi  = _sclk = 0;
-}
+}*/
 
 void Adafruit_ILI9340::spiwrite(uint8_t c) {
-
-  //Serial.print("0x"); Serial.print(c, HEX); Serial.print(", ");
-
   if (hwSPI) {
     SPI.transfer(c);
-  } else {
-    // Fast SPI bitbang swiped from LPD8806 library
+  }
+	else {
     for(uint8_t bit = 0x80; bit; bit >>= 1) {
-      if(c & bit) {
+      if(c & bit)
         digitalWrite(_mosi, HIGH);
-      } else {
+			else
         digitalWrite(_mosi, LOW);
-      }
+
       digitalWrite(_sclk, HIGH);
       digitalWrite(_sclk, LOW);
     }
   }
 }
-
 
 void Adafruit_ILI9340::writecommand(uint8_t c) {
   digitalWrite(_dc, LOW);
@@ -73,7 +69,6 @@ void Adafruit_ILI9340::writecommand(uint8_t c) {
 
   digitalWrite(_cs, HIGH);
 }
-
 
 void Adafruit_ILI9340::writedata(uint8_t c) {
   digitalWrite(_dc, HIGH);
@@ -95,7 +90,6 @@ void Adafruit_ILI9340::writedata(uint8_t c) {
 // Companion code to the above tables.  Reads and issues
 // a series of LCD commands stored in PROGMEM byte array.
 void Adafruit_ILI9340::commandList(uint8_t *addr) {
-
   uint8_t  numCommands, numArgs;
   uint16_t ms;
 
@@ -105,18 +99,18 @@ void Adafruit_ILI9340::commandList(uint8_t *addr) {
     numArgs  = pgm_read_byte(addr++);    //   Number of args to follow
     ms       = numArgs & DELAY;          //   If hibit set, delay follows args
     numArgs &= ~DELAY;                   //   Mask out delay bit
-    while(numArgs--) {                   //   For each argument...
+    while(numArgs--)	                   //   For each argument...
       writedata(pgm_read_byte(addr++));  //     Read, issue argument
-    }
 
     if(ms) {
       ms = pgm_read_byte(addr++); // Read post-command delay time (ms)
-      if(ms == 255) ms = 500;     // If 255, delay for 500 ms
-      delay(ms);
+      if(ms == 255)
+				ms = 500;     // If 255, delay for 500 ms
+
+			delay(ms);
     }
   }
 }
-
 
 void Adafruit_ILI9340::begin(void) {
   pinMode(_rst, OUTPUT);
@@ -130,7 +124,8 @@ void Adafruit_ILI9340::begin(void) {
     SPI.begin();
     SPI.setBitOrder(MSBFIRST);
     SPI.setDataMode(SPI_MODE0);
-  } else {
+  }
+	else {
     pinMode(_sclk, OUTPUT);
     pinMode(_mosi, OUTPUT);
     pinMode(_miso, INPUT);
@@ -139,28 +134,12 @@ void Adafruit_ILI9340::begin(void) {
 	}
 
   // toggle RST low to reset
-
   digitalWrite(_rst, HIGH);
   delay(5);
   digitalWrite(_rst, LOW);
   delay(20);
   digitalWrite(_rst, HIGH);
   delay(150);
-
-  /*
-  uint8_t x = readcommand8(ILI9340_RDMODE);
-  Serial.print("\nDisplay Power Mode: 0x"); Serial.println(x, HEX);
-  x = readcommand8(ILI9340_RDMADCTL);
-  Serial.print("\nMADCTL Mode: 0x"); Serial.println(x, HEX);
-  x = readcommand8(ILI9340_RDPIXFMT);
-  Serial.print("\nPixel Format: 0x"); Serial.println(x, HEX);
-  x = readcommand8(ILI9340_RDIMGFMT);
-  Serial.print("\nImage Format: 0x"); Serial.println(x, HEX);
-  x = readcommand8(ILI9340_RDSELFDIAG);
-  Serial.print("\nSelf Diagnostic: 0x"); Serial.println(x, HEX);
-  */
-
-  //if(cmdList) commandList(cmdList);
 
   writecommand(0xEF);
   writedata(0x03);
@@ -270,10 +249,8 @@ void Adafruit_ILI9340::begin(void) {
   writecommand(ILI9340_DISPON);    //Display on
 }
 
-
 void Adafruit_ILI9340::setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1,
  uint16_t y1) {
-
   writecommand(ILI9340_CASET); // Column addr set
   writedata(x0 >> 8);
   writedata(x0 & 0xFF);     // XSTART
@@ -301,7 +278,6 @@ void Adafruit_ILI9340::pushColor(uint16_t color) {
 }
 
 void Adafruit_ILI9340::drawPixel(int16_t x, int16_t y, uint16_t color) {
-
   if((x < 0) ||(x >= _width) || (y < 0) || (y >= _height)) return;
 
   setAddrWindow(x,y,x+1,y+1);
@@ -317,7 +293,6 @@ void Adafruit_ILI9340::drawPixel(int16_t x, int16_t y, uint16_t color) {
 
 void Adafruit_ILI9340::drawFastVLine(int16_t x, int16_t y, int16_t h,
  uint16_t color) {
-
   // Rudimentary clipping
   if((x >= _width) || (y >= _height)) return;
 
@@ -335,13 +310,13 @@ void Adafruit_ILI9340::drawFastVLine(int16_t x, int16_t y, int16_t h,
     spiwrite(hi);
     spiwrite(lo);
   }
+
   digitalWrite(_cs, HIGH);
 }
 
 
 void Adafruit_ILI9340::drawFastHLine(int16_t x, int16_t y, int16_t w,
   uint16_t color) {
-
   // Rudimentary clipping
   if((x >= _width) || (y >= _height)) return;
   if((x+w-1) >= _width)  w = _width-x;
@@ -354,6 +329,7 @@ void Adafruit_ILI9340::drawFastHLine(int16_t x, int16_t y, int16_t w,
     spiwrite(hi);
     spiwrite(lo);
   }
+
   digitalWrite(_cs, HIGH);
 }
 
@@ -364,7 +340,6 @@ void Adafruit_ILI9340::fillScreen(uint16_t color) {
 // fill a rectangle
 void Adafruit_ILI9340::fillRect(int16_t x, int16_t y, int16_t w, int16_t h,
   uint16_t color) {
-
   // rudimentary clipping (drawChar w/big text requires this)
   if((x >= _width) || (y >= _height)) return;
   if((x + w - 1) >= _width)  w = _width  - x;
@@ -383,18 +358,16 @@ void Adafruit_ILI9340::fillRect(int16_t x, int16_t y, int16_t w, int16_t h,
       spiwrite(lo);
     }
   }
+
   digitalWrite(_cs, HIGH);
 }
-
 
 // Pass 8-bit (each) R,G,B, get back 16-bit packed color
 uint16_t Adafruit_ILI9340::Color565(uint8_t r, uint8_t g, uint8_t b) {
   return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
 }
 
-
 void Adafruit_ILI9340::setRotation(uint8_t m) {
-
   writecommand(ILI9340_MADCTL);
   rotation = m % 4; // can't be higher than 3
   switch (rotation) {
@@ -421,99 +394,6 @@ void Adafruit_ILI9340::setRotation(uint8_t m) {
   }
 }
 
-
 void Adafruit_ILI9340::invertDisplay(boolean i) {
   writecommand(i ? ILI9340_INVON : ILI9340_INVOFF);
 }
-
-
-////////// stuff not actively being used, but kept for posterity
-
-
-uint8_t Adafruit_ILI9340::spiread(void) {
-  uint8_t r = 0;
-
-  if (hwSPI) {
-    r = SPI.transfer(0x00);
-  } else {
-
-    for (uint8_t i=0; i<8; i++) {
-      digitalWrite(_sclk, LOW);
-      digitalWrite(_sclk, HIGH);
-      r <<= 1;
-      if (digitalRead(_miso))
-	r |= 0x1;
-    }
-  }
-  //Serial.print("read: 0x"); Serial.print(r, HEX);
-
-  return r;
-}
-
- uint8_t Adafruit_ILI9340::readdata(void) {
-   digitalWrite(_dc, HIGH);
-   digitalWrite(_cs, LOW);
-   uint8_t r = spiread();
-   digitalWrite(_cs, HIGH);
-
-   return r;
-}
-
-
- uint8_t Adafruit_ILI9340::readcommand8(uint8_t c) {
-   digitalWrite(_dc, LOW);
-   digitalWrite(_sclk, LOW);
-   digitalWrite(_cs, LOW);
-   spiwrite(c);
-
-   digitalWrite(_dc, HIGH);
-   uint8_t r = spiread();
-   digitalWrite(_cs, HIGH);
-   return r;
-}
-
-
-
-/*
-
- uint16_t Adafruit_ILI9340::readcommand16(uint8_t c) {
- digitalWrite(_dc, LOW);
- if (_cs)
- digitalWrite(_cs, LOW);
-
- spiwrite(c);
- pinMode(_sid, INPUT); // input!
- uint16_t r = spiread();
- r <<= 8;
- r |= spiread();
- if (_cs)
- digitalWrite(_cs, HIGH);
-
- pinMode(_sid, OUTPUT); // back to output
- return r;
- }
-
- uint32_t Adafruit_ILI9340::readcommand32(uint8_t c) {
- digitalWrite(_dc, LOW);
- if (_cs)
- digitalWrite(_cs, LOW);
- spiwrite(c);
- pinMode(_sid, INPUT); // input!
-
- dummyclock();
- dummyclock();
-
- uint32_t r = spiread();
- r <<= 8;
- r |= spiread();
- r <<= 8;
- r |= spiread();
- r <<= 8;
- r |= spiread();
- if (_cs)
- digitalWrite(_cs, HIGH);
-
- pinMode(_sid, OUTPUT); // back to output
- return r;
- }
- */

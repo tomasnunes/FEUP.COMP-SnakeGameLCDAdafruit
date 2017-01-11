@@ -36,7 +36,7 @@ public:
 
     for(int ii=0; ii<initSize; ++ii) {
       ++m_size;
-      updateHead();
+      updateHeadAndCheckWallHit();
       if(ii!=initSize-1) {
         drawHead();
         pushToVector();
@@ -48,6 +48,7 @@ public:
 
   ~Snake() {
     free(m_gridSnakePosition);
+    m_gridSnakePosition = nullptr;
   }
 
   Snake& operator++();
@@ -57,7 +58,7 @@ public:
   void dies();
   void flash();
   bool playAgain();
-  void updateHead();
+  void updateHeadAndCheckWallHit();
   void drawHead();
   void cleanTail();
   void drawAndClean();
@@ -65,7 +66,7 @@ public:
   void getDirection();
   void generateFood();
   void pushToVector();
-  bool ateItsOwnTail() const;
+  void ateItsOwnTail();
 
   friend class Food;
   friend bool operator==(const Food &food, const Snake &snake);

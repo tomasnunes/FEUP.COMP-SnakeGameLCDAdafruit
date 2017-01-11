@@ -19,8 +19,7 @@
 
 #include "Arduino.h"
 #include "Print.h"
-
-#include <Adafruit_GFX.h>
+#include "Adafruit_GFX.h"
 
 #define ILI9340_TFTWIDTH  240
 #define ILI9340_TFTHEIGHT 320
@@ -55,7 +54,6 @@
 #define ILI9340_PTLAR   0x30
 #define ILI9340_MADCTL  0x36
 
-
 #define ILI9340_MADCTL_MY  0x80
 #define ILI9340_MADCTL_MX  0x40
 #define ILI9340_MADCTL_MV  0x20
@@ -87,36 +85,34 @@
 
 #define ILI9340_GMCTRP1 0xE0
 #define ILI9340_GMCTRN1 0xE1
-/*
-#define ILI9340_PWCTR6  0xFC
-
-*/
 
 // Color definitions
 #define	ILI9340_BLACK   0x0000
 #define	ILI9340_BLUE    0x001F
 #define	ILI9340_RED     0xF800
 #define	ILI9340_GREEN   0x07E0
-#define	ILI9340_LIGHTGREEN   0x0990
-#define	ILI9340_DARKGREEN   0x0660
 #define ILI9340_CYAN    0x07FF
 #define ILI9340_MAGENTA 0xF81F
 #define ILI9340_YELLOW  0xFFE0
 #define ILI9340_WHITE   0xFFFF
 
+//----------------------------------------------------------------------------//
 const int g_width(240), g_heigth(320), g_ss(10);
 const uint8_t g_leftArrow(4), g_rightArrow(6), g_upArrow(5), g_downArrow(7);
-static char g_buffer('\0');
-// These are the pins used for the UNO
-// for Due/Mega/Leonardo use the hardware SPI pins (which are different)
 const uint8_t g_sclk(13), g_miso(12), g_mosi(11), g_cs(10), g_dc(9), g_rst(8);
 
+static char g_buffer('\0');
+
+static void cleanInput() {
+  for(int ii=0; ii<50; ++ii)
+    Serial.read();
+}
+//----------------------------------------------------------------------------//
+
 class Adafruit_ILI9340 : public Adafruit_GFX {
-
- public:
-
-  Adafruit_ILI9340(uint8_t CS, uint8_t RS, uint8_t MOSI, uint8_t SCLK, uint8_t RST, uint8_t MISO);
+public:
   Adafruit_ILI9340(uint8_t CS, uint8_t RS, uint8_t RST);
+  Adafruit_ILI9340(uint8_t CS, uint8_t RS, uint8_t MOSI, uint8_t SCLK, uint8_t RST, uint8_t MISO);
 
   void     begin(void),
            setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1),
@@ -129,29 +125,22 @@ class Adafruit_ILI9340 : public Adafruit_GFX {
              uint16_t color),
            setRotation(uint8_t r),
            invertDisplay(boolean i);
+
   uint16_t Color565(uint8_t r, uint8_t g, uint8_t b);
 
-  /* These are not for current use, 8-bit protocol only! */
   uint8_t  readdata(void),
            readcommand8(uint8_t);
-  /*
-  uint16_t readcommand16(uint8_t);
-  uint32_t readcommand32(uint8_t);
-  void     dummyclock(void);
-  */
 
   void     spiwrite(uint8_t),
            writecommand(uint8_t c),
            writedata(uint8_t d),
            commandList(uint8_t *addr);
+
   uint8_t  spiread(void);
 
  private:
   uint8_t  tabcolor;
-
-
-
-  boolean  hwSPI;
+  bool     hwSPI;
   uint8_t  _cs, _dc, _rst, _mosi, _miso, _sclk, mosipinmask, clkpinmask, cspinmask, dcpinmask;
 };
 

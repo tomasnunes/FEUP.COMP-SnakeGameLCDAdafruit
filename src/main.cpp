@@ -17,7 +17,7 @@
 #include "Snake.h"
 #include "Wire.h"
 
-bool g_menuFlag(true), g_playGame(false), g_playDemo(false), g_hardMode(false);
+bool g_menuFlag(true), g_playGame(false), g_hardMode(false);
 
 void printMenu();
 void playGame();
@@ -36,10 +36,7 @@ unsigned long testFilledTriangles();
 unsigned long testRoundRects();
 unsigned long testFilledRoundRects();
 
-// Using software SPI is really not suggested, its incredibly slow
-//Adafruit_ILI9340 tft = Adafruit_ILI9340(_cs, _dc, _mosi, _sclk, _rst, _miso);
-// Use hardware SPI
-Adafruit_ILI9340 tft = Adafruit_ILI9340(g_cs, g_dc, g_rst);
+Adafruit_ILI9340 tft = Adafruit_ILI9340(g_cs, g_dc, g_mosi, g_sclk, g_rst, g_miso);
 
 void setup() {
   Serial.begin(9600);
@@ -55,11 +52,16 @@ void setup() {
   Wire.begin();
   tft.begin();
 
-  //PRINT SOMETHING TO THE SCREEN
+  tft.setTextColor(ILI9340_BLACK);
+  tft.setTextSize(4);
+  tft.setCursor(75, 120);
+  tft.print("COMP");
+  tft.setCursor(40, 160);
+  tft.print("PROJECT");
 
   tft.fillScreen(ILI9340_BLACK);
 
-  //LOCK SCREEN (create function, put in lock screen after some time && eliminate time and add feup logo, micro sd)
+  //LOCK SCREEN (create function, put in lock screen after some time && eliminate time && add feup logo, micro sd)
 
   /*time_t t = now();
 
@@ -80,6 +82,8 @@ void setup() {
   tft.print("/");
   tft.print(year());
   tft.println();*/
+
+  cleanInput();
 
   tft.setCursor(25, 280);
   tft.setTextColor(ILI9340_GREEN);
@@ -103,46 +107,35 @@ void loop(void) {
   }
 
   if(!digitalRead(g_leftArrow) || g_buffer=='a' || g_buffer=='A') {
-    g_playDemo = true;
+    playDemo();
     g_menuFlag = true;
   }
-  else if(!digitalRead(g_downArrow) || g_buffer=='s' || g_buffer=='S') {
+  else if(!digitalRead(g_upArrow) || g_buffer=='w' || g_buffer=='W' || (g_playGame && !g_hardMode)) {
+    g_hardMode = false;
+    g_menuFlag = true;
+    playGame();
+  }
+  else if(!digitalRead(g_downArrow) || g_buffer=='s' || g_buffer=='S' || g_playGame) {
     g_hardMode = true;
     g_menuFlag = true;
-  }
-  else if(!digitalRead(g_upArrow) || g_buffer=='w' || g_buffer=='W') {
-    g_playGame = true;
-    g_menuFlag = true;
-  }
-  else if(!digitalRead(g_downArrow) || g_buffer=='s' || g_buffer=='S') {
-    g_menuFlag = true;
-  }
-
-  g_buffer = ' ';
-
-  if(g_hardMode) {
-    playGame();
-    if(g_playGame)
-      g_playGame = false;
-    else
-      g_hardMode = false;
-  }
-  else if(g_playGame) {
-    g_playGame = false;
     playGame();
   }
-  else if(g_playDemo) {
-    g_playDemo = false;
-    playDemo();
+  else if(!digitalRead(g_downArrow) || g_buffer=='d' || g_buffer=='D') {
+    g_menuFlag = true;
   }
   else if(g_menuFlag) {
     g_menuFlag = false;
+    g_hardMode = false;
     printMenu();
   }
+
+  g_buffer = ' ';
 }
 
 void printMenu() {
   tft.fillScreen(ILI9340_BLACK);
+
+  cleanInput();
 
   tft.setCursor(80, 70);
   tft.setTextColor(ILI9340_RED); tft.setTextSize(3);
@@ -173,14 +166,18 @@ void playGame() {
 
   snake.printScore();
 
+  cleanInput();
+
   while(!snake.isDead()) {
     snake.getDirection();
-    snake.updateHead();
+    snake.updateHeadAndCheckWallHit(); //Check if hit wall, on Hard Mode.
     if(snake == food) {
       ++snake;
       do {
-        food.updateAndDraw();
+        food.genLocation();
       } while(food != snake);
+
+      food.draw();
 
       //Updates Speed when snake grows
       if(!(snake.getSize()%5) && gameSpeed>30)
@@ -189,15 +186,17 @@ void playGame() {
       snake.drawHead();
       snake.pushToVector();
     }
-    else if(snake.ateItsOwnTail() || snake.isDead()) {
-      snake.dies();
-      g_playGame = snake.playAgain();
-    }
     else {
-      snake.drawAndClean();
-      delay(gameSpeed); //Controls the SPEED!
+      snake.ateItsOwnTail();
+      if(!snake.isDead()) {
+        snake.drawAndClean();
+        delay(gameSpeed); //Controls the SPEED!
+      }
     }
   }
+
+  snake.dies();
+  g_playGame = snake.playAgain();
 }
 
 void playDemo() {
