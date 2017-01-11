@@ -104,6 +104,7 @@ const uint8_t g_sclk(13), g_miso(12), g_mosi(11), g_cs(10), g_dc(9), g_rst(8);
 static char g_buffer('\0');
 
 static void cleanInput() {
+  g_buffer = ' ';
   for(int ii=0; ii<50; ++ii)
     Serial.read();
 }

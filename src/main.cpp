@@ -21,6 +21,7 @@ bool g_menuFlag(true), g_playGame(false), g_hardMode(false);
 
 void printMenu();
 void playGame();
+void lockScreen();
 //Demo
 void playDemo();
 unsigned long testFillScreen();
@@ -59,45 +60,7 @@ void setup() {
   tft.setCursor(40, 160);
   tft.print("PROJECT");
 
-  tft.fillScreen(ILI9340_BLACK);
-
-  //LOCK SCREEN (create function, put in lock screen after some time && eliminate time && add feup logo, micro sd)
-
-  /*time_t t = now();
-
-  tft.setCursor(70, 70);
-  tft.setTextColor(ILI9340_WHITE); tft.setTextSize(2);
-  tft.print(hour());
-  tft.print(":");
-  if(minute() < 10)
-    tft.print('0');
-  tft.print(minute());
-  tft.print(":");
-  if(second() < 10)
-    tft.print('0');
-  tft.println(second());
-  tft.print(day());
-  tft.print("/");
-  tft.print(month());
-  tft.print("/");
-  tft.print(year());
-  tft.println();*/
-
-  cleanInput();
-
-  tft.setCursor(25, 280);
-  tft.setTextColor(ILI9340_GREEN);
-  tft.setTextSize(2);
-  tft.print("Press any key...");
-
-  do {
-    if(Serial.available()) {
-      g_buffer = ' ';
-      g_buffer = Serial.read();
-    }
-  } while((g_buffer==' ' || g_buffer=='\0' || g_buffer=='\n') && digitalRead(g_leftArrow) && digitalRead(g_rightArrow) && digitalRead(g_upArrow) && digitalRead(g_downArrow));
-
-  g_buffer = ' ';
+  lockScreen();
 }
 
 void loop(void) {
@@ -122,6 +85,7 @@ void loop(void) {
   }
   else if(!digitalRead(g_downArrow) || g_buffer=='d' || g_buffer=='D') {
     g_menuFlag = true;
+    lockScreen();
   }
   else if(g_menuFlag) {
     g_menuFlag = false;
@@ -141,15 +105,15 @@ void printMenu() {
   tft.setTextColor(ILI9340_RED); tft.setTextSize(3);
   tft.print("MENU");
 
-  tft.setCursor(20, 190);
+  tft.setCursor(7, 190);
   tft.setTextColor(ILI9340_WHITE); tft.setTextSize(2);
-  tft.println("(UP)    Game");
-  tft.setCursor(20, 210);
-  tft.println("(DOWN)  Hard Mode");
-  tft.setCursor(20, 230);
-  tft.println("(LEFT)  Demo");
-  tft.setCursor(20, 250);
-  tft.println("(RIGHT) Images");
+  tft.println("   (UP) Game");
+  tft.setCursor(7, 210);
+  tft.println(" (DOWN) Hard Mode");
+  tft.setCursor(7, 230);
+  tft.println(" (LEFT) Demo");
+  tft.setCursor(7, 250);
+  tft.println("(RIGHT) Lock Screen");
 }
 
 void playGame() {
@@ -197,6 +161,39 @@ void playGame() {
 
   snake.dies();
   g_playGame = snake.playAgain();
+}
+
+void lockScreen() {
+  tft.fillScreen(ILI9340_BLACK);
+
+  //LOCK SCREEN (create function, put in lock screen after some time && eliminate time && add feup logo, micro sd)
+
+  cleanInput();
+
+  tft.setTextColor(ILI9340_RED);
+  tft.setTextSize(4);
+  tft.setCursor(77, 30);
+  tft.print("FEUP");
+  tft.setTextColor(ILI9340_WHITE);
+  tft.setTextSize(2);
+  tft.setCursor(38, 120);
+  tft.print("COMP 2016/2017");
+  tft.setCursor(38, 170);
+  tft.print("Mafalda Varela");
+  tft.setCursor(53, 190);
+  tft.print("Tomas Nunes");
+  tft.setTextColor(ILI9340_GREEN);
+  tft.setCursor(25, 280);
+  tft.print("Press any key...");
+
+  do {
+    if(Serial.available()) {
+      g_buffer = ' ';
+      g_buffer = Serial.read();
+    }
+  } while((g_buffer==' ' || g_buffer=='\0' || g_buffer=='\n') && digitalRead(g_leftArrow) && digitalRead(g_rightArrow) && digitalRead(g_upArrow) && digitalRead(g_downArrow));
+
+  g_buffer = ' ';
 }
 
 void playDemo() {
