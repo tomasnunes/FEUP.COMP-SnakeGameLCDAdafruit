@@ -24,7 +24,7 @@ unsigned long testFilledTriangles();
 unsigned long testRoundRects();
 unsigned long testFilledRoundRects();
 
-Adafruit_ILI9340 tft = Adafruit_ILI9340(g_cs, g_dc, g_mosi, g_sclk, g_rst, g_miso);
+Adafruit_ILI9340 tft = Adafruit_ILI9340(g_cs, g_dc, g_rst);
 
 void setup() {
   Serial.begin(9600);

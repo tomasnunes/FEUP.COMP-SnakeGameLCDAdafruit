@@ -20,6 +20,7 @@
 #include "wiring_private.h"
 #include "SPI.h"
 
+//Hardware SPI
 Adafruit_ILI9340::Adafruit_ILI9340(uint8_t cs, uint8_t dc, uint8_t rst) : Adafruit_GFX(ILI9340_TFTWIDTH, ILI9340_TFTHEIGHT) {
   _cs   = cs;
   _dc   = dc;
@@ -27,6 +28,7 @@ Adafruit_ILI9340::Adafruit_ILI9340(uint8_t cs, uint8_t dc, uint8_t rst) : Adafru
   hwSPI = true;
 }
 
+//Software SPI
 Adafruit_ILI9340::Adafruit_ILI9340(uint8_t cs, uint8_t dc, uint8_t mosi, uint8_t sclk, uint8_t rst,  uint8_t miso) : Adafruit_GFX(ILI9340_TFTWIDTH, ILI9340_TFTHEIGHT) {
   _cs   = cs;
   _dc   = dc;
