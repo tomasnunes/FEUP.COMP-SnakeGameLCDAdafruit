@@ -15,14 +15,19 @@
  ****************************************************/
 
 #include "Adafruit_ILI9340.h"
-#include <limits.h>
+#include "limits.h"
 #include "pins_arduino.h"
 #include "wiring_private.h"
-#include <SPI.h>
+#include "SPI.h"
 
-// Constructor when using software SPI.  All output pins are configurable.
-Adafruit_ILI9340::Adafruit_ILI9340(uint8_t cs, uint8_t dc, uint8_t mosi,
-				   uint8_t sclk, uint8_t rst, uint8_t miso) : Adafruit_GFX(ILI9340_TFTWIDTH, ILI9340_TFTHEIGHT) {
+Adafruit_ILI9340::Adafruit_ILI9340(uint8_t cs, uint8_t dc, uint8_t rst) : Adafruit_GFX(ILI9340_TFTWIDTH, ILI9340_TFTHEIGHT) {
+  _cs   = cs;
+  _dc   = dc;
+  _rst  = rst;
+  hwSPI = true;
+}
+
+Adafruit_ILI9340::Adafruit_ILI9340(uint8_t cs, uint8_t dc, uint8_t mosi, uint8_t sclk, uint8_t rst,  uint8_t miso) : Adafruit_GFX(ILI9340_TFTWIDTH, ILI9340_TFTHEIGHT) {
   _cs   = cs;
   _dc   = dc;
   _mosi  = mosi;
@@ -31,17 +36,6 @@ Adafruit_ILI9340::Adafruit_ILI9340(uint8_t cs, uint8_t dc, uint8_t mosi,
   _rst  = rst;
   hwSPI = false;
 }
-
-//NOT USED
-// Constructor when using hardware SPI.  Faster, but must use SPI pins
-// specific to each board type (e.g. 11,13 for Uno, 51,52 for Mega, etc.)
-/*Adafruit_ILI9340::Adafruit_ILI9340(uint8_t cs, uint8_t dc, uint8_t rst) : Adafruit_GFX(ILI9340_TFTWIDTH, ILI9340_TFTHEIGHT) {
-  _cs   = cs;
-  _dc   = dc;
-  _rst  = rst;
-  hwSPI = true;
-  _mosi  = _sclk = 0;
-}*/
 
 void Adafruit_ILI9340::spiwrite(uint8_t c) {
   if (hwSPI) {
@@ -121,9 +115,7 @@ void Adafruit_ILI9340::begin(void) {
   dcpinmask = digitalPinToBitMask(_dc);
 
   if(hwSPI) { // Using hardware SPI
-    SPI.begin();
-    SPI.setBitOrder(MSBFIRST);
-    SPI.setDataMode(SPI_MODE0);
+		SPI.beginTransaction(SPISettings(10000000, MSBFIRST, SPI_MODE0));
   }
 	else {
     pinMode(_sclk, OUTPUT);

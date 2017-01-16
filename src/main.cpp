@@ -1,17 +1,3 @@
-/***************************************************
-  This is an example sketch for the Adafruit 2.2" SPI display.
-  This library works with the Adafruit 2.2" TFT Breakout w/SD card
-  ----> http://www.adafruit.com/products/1480
-
-  Check out the links above for our tutorials and wiring diagrams
-  These displays use SPI to communicate, 4 or 5 pins are required to
-  interface (RST is optional)
-  Adafruit invests time and resources providing this open source code,
-  please support Adafruit and open-source hardware by purchasing
-  products from Adafruit!
-  Written by Limor Fried/Ladyada for Adafruit Industries.
-  MIT license, all text above must be included in any redistribution
- ****************************************************/
 #include "SPI.h"
 #include "Adafruit_ILI9340.h"
 #include "Snake.h"
@@ -22,7 +8,8 @@ bool g_menuFlag(true), g_playGame(false), g_hardMode(false);
 void printMenu();
 void playGame();
 void lockScreen();
-//Demo
+
+//Demo from Adafruit Industries, copied from Adafruit_ILI9340 files!
 void playDemo();
 unsigned long testFillScreen();
 unsigned long testText();
